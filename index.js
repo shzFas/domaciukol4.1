@@ -51,6 +51,28 @@ const randomDateBetween = (start, end) => {
 };
 const toIso = (d) => d.toISOString();
 
+function ageFromBirthdateISO(birthISO) {
+    const now = Date.now();
+    const t = new Date(birthISO).getTime();
+    return (now - t) / (365.2425 * 24 * 60 * 60 * 1000);
+}
+
+function average(nums) {
+    if (!nums.length) return 0;
+    return nums.reduce((s, n) => s + n, 0) / nums.length;
+}
+
+function median(numbers) {
+    if (numbers.length === 0) return 0;
+    const arr = [...numbers].sort((a, b) => a - b);
+    const mid = Math.floor(arr.length / 2);
+    return arr.length % 2 === 0 ? (arr[mid - 1] + arr[mid]) / 2 : arr[mid];
+}
+
+function round2(n) {
+    return Math.round(n * 100) / 100;
+}
+
 function generateEmployeeData(dtoIn) {
     const { count, age } = dtoIn;
 
@@ -86,4 +108,11 @@ function main(dtoIn = {}) {
 const dtoIn = { count: 10, age: { min: 19, max: 35 } };
 console.log(main(dtoIn));
 
-module.exports = { main, generateEmployeeData };
+module.exports = {
+    main,
+    generateEmployeeData,
+    ageFromBirthdateISO,
+    average,
+    median,
+    round2
+};
