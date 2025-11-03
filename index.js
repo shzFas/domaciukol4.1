@@ -75,7 +75,6 @@ function round2(n) {
 
 function generateEmployeeData(dtoIn) {
     const { count, age } = dtoIn;
-
     const maxDob = yearsAgo(Number(age.min));
     const minDob = yearsAgo(Number(age.max));
 
@@ -98,11 +97,64 @@ function generateEmployeeData(dtoIn) {
     return list;
 }
 
+function getEmployeeStatistics(employees) {
+    const total = employees.length;
+
+    let workload10 = 0, workload20 = 0, workload30 = 0, workload40 = 0;
+
+    const ages = [];
+    let minAge = Infinity;
+    let maxAge = -Infinity;
+
+    let femaleWorkloadSum = 0;
+    let femaleCount = 0;
+
+    for (const e of employees) {
+        if (e.workload === 10) workload10++;
+        else if (e.workload === 20) workload20++;
+        else if (e.workload === 30) workload30++;
+        else if (e.workload === 40) workload40++;
+
+        const a = ageFromBirthdateISO(e.birthdate);
+        ages.push(a);
+        if (a < minAge) minAge = a;
+        if (a > maxAge) maxAge = a;
+
+        if (e.gender === "female") {
+            femaleWorkloadSum += e.workload;
+            femaleCount++;
+        }
+    }
+
+    const averageAge = round2(average(ages));
+    const medianAge = round2(median(ages));
+    const medianWorkload = median(employees.map(e => e.workload));
+    const averageWorkloadFemale = femaleCount ? round2(femaleWorkloadSum / femaleCount) : 0;
+
+    const sortedByWorkload = [...employees].sort((a, b) => a.workload - b.workload);
+
+    return {
+        total,
+        workload10,
+        workload20,
+        workload30,
+        workload40,
+        averageAge,
+        minAge: round2(minAge),
+        maxAge: round2(maxAge),
+        medianAge,
+        medianWorkload,
+        averageWorkloadFemale,
+        sortedByWorkload
+    };
+}
+
 function main(dtoIn = {}) {
     validateDtoIn(dtoIn);
 
     const employees = generateEmployeeData(dtoIn);
-    return employees;
+    const stats = getEmployeeStatistics(employees);
+    return stats;
 }
 
 const dtoIn = { count: 10, age: { min: 19, max: 35 } };
@@ -111,8 +163,5 @@ console.log(main(dtoIn));
 module.exports = {
     main,
     generateEmployeeData,
-    ageFromBirthdateISO,
-    average,
-    median,
-    round2
+    getEmployeeStatistics
 };
