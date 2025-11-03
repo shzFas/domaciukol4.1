@@ -99,13 +99,11 @@ function generateEmployeeData(dtoIn) {
 
 function getEmployeeStatistics(employees) {
     const total = employees.length;
-
     let workload10 = 0, workload20 = 0, workload30 = 0, workload40 = 0;
 
     const ages = [];
     let minAge = Infinity;
     let maxAge = -Infinity;
-
     let femaleWorkloadSum = 0;
     let femaleCount = 0;
 
@@ -163,5 +161,6 @@ console.log(main(dtoIn));
 module.exports = {
     main,
     generateEmployeeData,
-    getEmployeeStatistics
+    getEmployeeStatistics,
+    validateDtoIn
 };
