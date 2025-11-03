@@ -1,20 +1,23 @@
-function validateDtoIn(dtoIn) {
-    const { count, age } = dtoIn;
+function validateDtoIn(inputDto) {
+    const { count, age } = inputDto;
     if (!Number.isInteger(count) || count <= 0) {
         throw new Error("count musí být kladné celé číslo.");
     }
     if (!age || typeof age !== "object") {
         throw new Error("age musí být objekt { min, max }.");
     }
-    const minAge = Number(age.min);
-    const maxAge = Number(age.max);
-    if (
-        !Number.isFinite(minAge) ||
-        !Number.isFinite(maxAge) ||
-        minAge < 0 ||
-        maxAge < 0 ||
-        minAge > maxAge
-    ) {
+
+    const minimumAge = Number(age.min);
+    const maximumAge = Number(age.max);
+
+    const isInvalid =
+        !Number.isFinite(minimumAge) ||
+        !Number.isFinite(maximumAge) ||
+        minimumAge < 0 ||
+        maximumAge < 0 ||
+        minimumAge > maximumAge;
+
+    if (isInvalid) {
         throw new Error("Neplatný rozsah age.min / age.max.");
     }
 }
@@ -29,130 +32,151 @@ const femaleFirstNames = [
     "Adéla", "Alena", "Anna", "Barbora", "Dana", "Denisa", "Eliška", "Eva", "Hana", "Ivana",
     "Jana", "Jitka", "Kateřina", "Klára", "Lucie", "Marie", "Markéta", "Petra", "Tereza", "Veronika"
 ];
-const surnamesMale = [
+const maleSurnames = [
     "Novák", "Svoboda", "Dvořák", "Černý", "Procházka", "Kučera", "Veselý", "Horák", "Němec", "Pokorný",
     "Hájek", "Král", "Fiala", "Kříž", "Beneš", "Sedláček", "Zeman", "Kolář", "Urban", "Bláha"
 ];
-const surnamesFemale = [
+const femaleSurnames = [
     "Nováková", "Svobodová", "Dvořáková", "Černá", "Procházková", "Kučerová", "Veselá", "Horáková",
     "Němcová", "Pokorná", "Hájková", "Králová", "Fialová", "Křížová", "Benešová", "Sedláčková",
     "Zemanová", "Kolářová", "Urbanová", "Bláhová"
 ];
 
-const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+const pickRandom = (array) => array[Math.floor(Math.random() * array.length)];
+
 const yearsAgo = (years) => {
-    const d = new Date();
-    d.setUTCFullYear(d.getUTCFullYear() - years);
-    return d;
+    const date = new Date();
+    date.setUTCFullYear(date.getUTCFullYear() - years);
+    return date;
 };
-const randomDateBetween = (start, end) => {
-    const t = start.getTime() + Math.random() * (end.getTime() - start.getTime());
-    return new Date(t);
-};
-const toIso = (d) => d.toISOString();
 
-function ageFromBirthdateISO(birthISO) {
+const getRandomDateBetween = (startDate, endDate) => {
+    const time = startDate.getTime() + Math.random() * (endDate.getTime() - startDate.getTime());
+    return new Date(time);
+};
+
+const toIsoString = (date) => date.toISOString();
+
+/* возраст от даты рождения */
+function getAgeFromBirthdate(birthdateIso) {
     const now = Date.now();
-    const t = new Date(birthISO).getTime();
-    return (now - t) / (365.2425 * 24 * 60 * 60 * 1000);
+    const birthTime = new Date(birthdateIso).getTime();
+    const yearsPassed = (now - birthTime) / (365.2425 * 24 * 60 * 60 * 1000);
+    return yearsPassed;
 }
 
-function average(nums) {
-    if (!nums.length) return 0;
-    return nums.reduce((s, n) => s + n, 0) / nums.length;
+/* средний */
+function getAverage(values) {
+    if (values.length === 0) return 0;
+    const total = values.reduce((sum, value) => sum + value, 0);
+    return total / values.length;
 }
 
-function median(numbers) {
-    if (numbers.length === 0) return 0;
-    const arr = [...numbers].sort((a, b) => a - b);
-    const mid = Math.floor(arr.length / 2);
-    return arr.length % 2 === 0 ? (arr[mid - 1] + arr[mid]) / 2 : arr[mid];
+/* медиана */
+function getMedian(values) {
+    if (values.length === 0) return 0;
+    const sorted = [...values].sort((a, b) => a - b);
+    const middleIndex = Math.floor(sorted.length / 2);
+    return sorted.length % 2 === 0
+        ? (sorted[middleIndex - 1] + sorted[middleIndex]) / 2
+        : sorted[middleIndex];
 }
 
-function round2(n) {
-    return Math.round(n * 100) / 100;
+function roundToTwoDecimals(value) {
+    return Math.round(value * 100) / 100;
 }
 
-function generateEmployeeData(dtoIn) {
-    const { count, age } = dtoIn;
-    const maxDob = yearsAgo(Number(age.min));
-    const minDob = yearsAgo(Number(age.max));
+function generateEmployeeData(inputDto) {
+    const { count, age } = inputDto;
+    const maximumBirthDate = yearsAgo(Number(age.min)); // моложе
+    const minimumBirthDate = yearsAgo(Number(age.max)); // старше
 
-    const list = [];
+    const employees = [];
+
     for (let i = 0; i < count; i++) {
         const gender = Math.random() < 0.5 ? "male" : "female";
-        const name = gender === "male" ? pick(maleFirstNames) : pick(femaleFirstNames);
-        const surname = gender === "male" ? pick(surnamesMale) : pick(surnamesFemale);
-        const workload = pick(WORKLOADS);
-        const birthdate = toIso(randomDateBetween(minDob, maxDob));
+        const firstName = gender === "male" ? pickRandom(maleFirstNames) : pickRandom(femaleFirstNames);
+        const surname = gender === "male" ? pickRandom(maleSurnames) : pickRandom(femaleSurnames);
+        const workload = pickRandom(WORKLOADS);
+        const birthdate = toIsoString(getRandomDateBetween(minimumBirthDate, maximumBirthDate));
 
-        list.push({
+        employees.push({
             gender,
             birthdate,
-            name,
+            name: firstName,
             surname,
             workload
         });
     }
-    return list;
+
+    return employees;
 }
 
-function getEmployeeStatistics(employees) {
-    const total = employees.length;
-    let workload10 = 0, workload20 = 0, workload30 = 0, workload40 = 0;
+function getEmployeeStatistics(employeeList) {
+    const totalEmployees = employeeList.length;
 
-    const ages = [];
-    let minAge = Infinity;
-    let maxAge = -Infinity;
+    let workload10Count = 0;
+    let workload20Count = 0;
+    let workload30Count = 0;
+    let workload40Count = 0;
+
+    const allAges = [];
+    let minimumAge = Infinity;
+    let maximumAge = -Infinity;
+
     let femaleWorkloadSum = 0;
-    let femaleCount = 0;
+    let femaleEmployeeCount = 0;
 
-    for (const e of employees) {
-        if (e.workload === 10) workload10++;
-        else if (e.workload === 20) workload20++;
-        else if (e.workload === 30) workload30++;
-        else if (e.workload === 40) workload40++;
+    for (const employee of employeeList) {
+        // счетчики рабочей нагрузки
+        if (employee.workload === 10) workload10Count++;
+        else if (employee.workload === 20) workload20Count++;
+        else if (employee.workload === 30) workload30Count++;
+        else if (employee.workload === 40) workload40Count++;
 
-        const a = ageFromBirthdateISO(e.birthdate);
-        ages.push(a);
-        if (a < minAge) minAge = a;
-        if (a > maxAge) maxAge = a;
+        // статистика по возрасту
+        const currentAge = getAgeFromBirthdate(employee.birthdate);
+        allAges.push(currentAge);
+        if (currentAge < minimumAge) minimumAge = currentAge;
+        if (currentAge > maximumAge) maximumAge = currentAge;
 
-        if (e.gender === "female") {
-            femaleWorkloadSum += e.workload;
-            femaleCount++;
+        // женская рабочая нагрузка
+        if (employee.gender === "female") {
+            femaleWorkloadSum += employee.workload;
+            femaleEmployeeCount++;
         }
     }
 
-    const averageAge = round2(average(ages));
-    const medianAge = round2(median(ages));
-    const medianWorkload = median(employees.map(e => e.workload));
-    const averageWorkloadFemale = femaleCount ? round2(femaleWorkloadSum / femaleCount) : 0;
+    const averageAge = roundToTwoDecimals(getAverage(allAges));
+    const medianAge = roundToTwoDecimals(getMedian(allAges));
+    const medianWorkload = getMedian(employeeList.map(emp => emp.workload));
+    const averageFemaleWorkload = femaleEmployeeCount
+        ? roundToTwoDecimals(femaleWorkloadSum / femaleEmployeeCount)
+        : 0;
 
-    const sortedByWorkload = [...employees].sort((a, b) => a.workload - b.workload);
+    const employeesSortedByWorkload = [...employeeList].sort((a, b) => a.workload - b.workload);
 
     return {
-        total,
-        workload10,
-        workload20,
-        workload30,
-        workload40,
+        total: totalEmployees,
+        workload10: workload10Count,
+        workload20: workload20Count,
+        workload30: workload30Count,
+        workload40: workload40Count,
         averageAge,
-        minAge: round2(minAge),
-        maxAge: round2(maxAge),
+        minAge: roundToTwoDecimals(minimumAge),
+        maxAge: roundToTwoDecimals(maximumAge),
         medianAge,
         medianWorkload,
-        averageWorkloadFemale,
-        sortedByWorkload
+        averageWorkloadFemale: averageFemaleWorkload,
+        sortedByWorkload: employeesSortedByWorkload
     };
 }
 
-function main(dtoIn = {}) {
-    validateDtoIn(dtoIn);
-
-    const employees = generateEmployeeData(dtoIn);
-    const stats = getEmployeeStatistics(employees);
-    return stats;
+function main(inputDto = {}) {
+    validateDtoIn(inputDto);
+    const employees = generateEmployeeData(inputDto);
+    const statistics = getEmployeeStatistics(employees);
+    return statistics;
 }
 
 const dtoIn = { count: 10, age: { min: 19, max: 35 } };
